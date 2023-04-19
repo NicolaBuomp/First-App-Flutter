@@ -13,8 +13,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late int counter = widget.valueCounter;
-  late int valueIncrementCounter;
-
+  late int valueIncrementCounter = 0;
+  TextEditingController textFieldController = TextEditingController();
   void incrementCounter() {
     setState(() {
       counter = counter + valueIncrementCounter;
@@ -25,13 +25,20 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       counter = 0;
       valueIncrementCounter = 0;
+      textFieldController.text = "";
     });
   }
 
   void setCounter(value) {
-    setState(() {
-      valueIncrementCounter = int.parse(value);
-    });
+    if (value != "") {
+      setState(() {
+        valueIncrementCounter = int.parse(textFieldController.text);
+      });
+    } else {
+      setState(() {
+        valueIncrementCounter = 0;
+      });
+    }
   }
 
   @override
@@ -41,13 +48,18 @@ class _HomePageState extends State<HomePage> {
         title: Text(widget.title),
       ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: <Widget>[
-          const Text('You have pushed the button this many times:',
-              style: TextStyle(fontSize: 25), textAlign: TextAlign.center),
-          Text(
-            '$counter',
-            style: Theme.of(context).textTheme.headlineMedium,
+          const Padding(
+            padding: EdgeInsets.all(10),
+            child: Text('Aggiungi gli ITEM',
+                style: TextStyle(fontSize: 25), textAlign: TextAlign.center),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              'Item inseriti: $counter',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
           ),
           Padding(
             padding: const EdgeInsets.only(
@@ -55,42 +67,76 @@ class _HomePageState extends State<HomePage> {
               right: 40,
             ),
             child: TextField(
+              controller: textFieldController,
               onChanged: (text) {
                 setCounter(text);
               },
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'Enter a search term',
+                hintText: 'Quanti ITEM vuoi inserire ?',
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                height: 50,
-                width: 150,
-                child: ElevatedButton.icon(
-                  onPressed: () => incrementCounter(),
-                  icon: Icon(Icons.add, size: 18),
-                  label: Text("Aggiungi"),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(0, 30, 0, 50),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                SizedBox(
+                  height: 50,
+                  width: 150,
+                  child: ElevatedButton.icon(
+                    onPressed: () => valueIncrementCounter != 0
+                        ? incrementCounter()
+                        : showAlertDialog(context),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(valueIncrementCounter.toString()),
+                  ),
                 ),
-              ),
-              SizedBox(
-                height: 50,
-                width: 150,
-                child: OutlinedButton.icon(
-                  onPressed: () => restartCounter(),
-                  icon: Icon(Icons.restart_alt_outlined),
-                  label: Text("Restart"),
+                SizedBox(
+                  height: 50,
+                  width: 150,
+                  child: OutlinedButton.icon(
+                    onPressed: () => restartCounter(),
+                    icon: const Icon(Icons.restart_alt_outlined),
+                    label: const Text("Restart"),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+Future<void> showAlertDialog(context) async {
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false, // user must tap button!
+    builder: (BuildContext context) {
+      return AlertDialog(
+        // <-- SEE HERE
+        title: const Text('Attenzione'),
+        content: SingleChildScrollView(
+          child: ListBody(
+            children: const <Widget>[
+              Text('Inserisci un numero maggiore di 0!'),
+            ],
+          ),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: const Text('Chiudi'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ],
+      );
+    },
+  );
 }
